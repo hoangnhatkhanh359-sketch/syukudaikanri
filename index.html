@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>宿題管理アプリ</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        background: linear-gradient(135deg, #e0e7ff 0%, #ffffff 50%, #f3e8ff 100%);
+        min-height: 100vh;
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #312e81;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .settings-icon {
+        cursor: pointer;
+        width: 2rem;
+        height: 2rem;
+        color: #312e81;
+        transition: transform 0.2s;
+      }
+
+      .settings-icon:hover {
+        transform: rotate(90deg);
+      }
+
+      .card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .card h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #1f2937;
+      }
+
+      .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .calendar-nav {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .calendar-nav button {
+        padding: 0.5rem 1rem;
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+
+      .calendar-nav button:hover {
+        background-color: #4338ca;
+      }
+
+      .calendar-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1f2937;
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+      }
+
+      .calendar-day-header {
+        text-align: center;
+        font-weight: 600;
+        color: #6b7280;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .calendar-day {
+        min-height: 100px;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+      }
+
+      .calendar-day:hover {
+        border-color: #4f46e5;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+      }
+
+      .calendar-day.other-month {
+        background-color: #f9fafb;
+        opacity: 0.5;
+      }
+
+      .calendar-day.today {
+        background-color: #e0e7ff;
+        border-color: #4f46e5;
+      }
+
+      .day-number {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .day-homeworks {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .day-homework {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background-color: #e0e7ff;
+        color: #3730a3;
+      }
+
+      .day-homework:hover {
+        transform: scale(1.02);
+      }
+
+      .day-homework.high {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      .day-homework.medium {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .day-homework.low {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+
+      .day-homework.completed {
+        opacity: 0.5;
+        text-decoration: line-through;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .modal-header h3 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1f2937;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6b7280;
+      }
+
+      .modal-close:hover {
+        color: #1f2937;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+      }
+
+      input, select, textarea {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+      }
+
+      input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      }
+
+      button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .btn-primary {
+        background-color: #4f46e5;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #4338ca;
+      }
+
+      .btn-danger {
+        background-color: #dc2626;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #b91c1c;
+      }
+
+      .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: #4b5563;
+      }
+
+      .homework-detail-item {
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .homework-detail-item.completed {
+        background-color: #f9fafb;
+        opacity: 0.75;
+      }
+
+      .homework-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .homework-detail-subject {
+        font-weight: bold;
+        color: #111827;
+      }
+
+      .homework-detail-task {
+        color: #374151;
+        margin-bottom: 0.5rem;
+      }
+
+      .homework-detail-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+
+      .badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      .badge-high {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      .badge-medium {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .badge-low {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+
+      .badge-not-started {
+        background-color: #f3f4f6;
+        color: #374151;
+      }
+
+      .badge-in-progress {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+
+      .badge-completed {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+
+      @media (max-width: 768px) {
+        .calendar-day {
+          min-height: 60px;
+        }
+
+        .day-homework {
+          font-size: 0.625rem;
+          padding: 0.125rem 0.25rem;
+        }
+
+        .day-number {
+          font-size: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        宿題管理アプリ
+        <svg class="settings-icon" onclick="openSettingsModal()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </h1>
+
+      <div class="card">
+        <h2>新しい宿題を追加</h2>
+        <form id="addForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="addSubject">教科</label>
+              <input type="text" id="addSubject" placeholder="例: 数学" required>
+            </div>
+            <div class="form-group">
+              <label for="addTask">課題内容</label>
+              <input type="text" id="addTask" placeholder="例: ページ52-54" required>
+            </div>
+            <div class="form-group">
+              <label for="addDueDate">提出期限</label>
+              <input type="date" id="addDueDate" required>
+            </div>
+            <div class="form-group priority-field" style="display: none;">
+              <label for="addPriority">優先度</label>
+              <select id="addPriority">
+                <option value="low">低</option>
+                <option value="medium" selected>中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">追加する</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="calendar-header">
+          <div class="calendar-nav">
+            <button onclick="changeMonth(-1)">前月</button>
+            <button onclick="changeMonth(1)">次月</button>
+          </div>
+          <div class="calendar-title" id="calendarTitle"></div>
+          <button onclick="goToToday()">今日</button>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="calendar-day-header">日</div>
+          <div class="calendar-day-header">月</div>
+          <div class="calendar-day-header">火</div>
+          <div class="calendar-day-header">水</div>
+          <div class="calendar-day-header">木</div>
+          <div class="calendar-day-header">金</div>
+          <div class="calendar-day-header">土</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <div class="footer">
+        <p>データはブラウザに保存されます</p>
+      </div>
+    </div>
+
+    <div class="modal" id="dayModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="dayModalTitle"></h3>
+          <button class="modal-close" onclick="closeModal('dayModal')">&times;</button>
+        </div>
+        <div id="dayHomeworks"></div>
+      </div>
+    </div>
+
+    <div class="modal" id="editModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>宿題を編集</h3>
+          <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+        </div>
+        <form id="editForm">
+          <input type="hidden" id="editId">
+          <div class="form-group">
+            <label for="editSubject">教科</label>
+            <input type="text" id="editSubject" required>
+          </div>
+          <div class="form-group">
+            <label for="editTask">課題内容</label>
+            <input type="text" id="editTask" required>
+          </div>
+          <div class="form-group">
+            <label for="editDueDate">提出期限</label>
+            <input type="date" id="editDueDate" required>
+          </div>
+          <div class="form-group priority-field" style="display: none;">
+            <label for="editPriority">優先度</label>
+            <select id="editPriority">
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editStatus">ステータス</label>
+            <select id="editStatus">
+              <option value="not_started">未着手</option>
+              <option value="in_progress">進行中</option>
+              <option value="completed">完了</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn-primary">更新</button>
+            <button type="button" class="btn-danger" onclick="deleteHomework()">削除</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>設定</h3>
+          <button class="modal-close" onclick="closeModal('settingsModal')">&times;</button>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="enablePriority" onchange="saveSettings()">
+            課題の優先度を入力する
+          </label>
+        </div>
+        <div class="form-group">
+          <label>データ管理</label>
+          <button type="button" class="btn-danger" onclick="clearAllData()">すべてのデータを削除</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let homeworks = JSON.parse(localStorage.getItem('homeworks')) || [];
+      let currentDate = new Date();
+      let selectedDate = null;
+      let settings = JSON.parse(localStorage.getItem('settings')) || { enablePriority: false };
+
+      const statusText = {
+        not_started: '未着手',
+        in_progress: '進行中',
+        completed: '完了'
+      };
+
+      const priorityText = {
+        low: '低',
+        medium: '中',
+        high: '高'
+      };
+
+      function saveHomeworks() {
+        localStorage.setItem('homeworks', JSON.stringify(homeworks));
+      }
+
+      function saveSettings() {
+        settings.enablePriority = document.getElementById('enablePriority').checked;
+        localStorage.setItem('settings', JSON.stringify(settings));
+        updatePriorityFields();
+      }
+
+      function loadSettings() {
+        document.getElementById('enablePriority').checked = settings.enablePriority;
+        updatePriorityFields();
+      }
+
+      function updatePriorityFields() {
+        const priorityFields = document.querySelectorAll('.priority-field');
+        priorityFields.forEach(field => {
+          field.style.display = settings.enablePriority ? 'flex' : 'none';
+        });
+      }
+
+      function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function isToday(date) {
+        const today = new Date();
+        return date.getDate() === today.getDate() &&
+               date.getMonth() === today.getMonth() &&
+               date.getFullYear() === today.getFullYear();
+      }
+
+      function getHomeworksForDate(date) {
+        const dateStr = formatDate(date);
+        return homeworks.filter(h => h.dueDate === dateStr);
+      }
+
+      function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        document.getElementById('calendarTitle').textContent = `${year}年${month + 1}月`;
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDay = firstDay.getDay();
+        const totalDays = lastDay.getDate();
+
+        const calendarGrid = document.getElementById('calendarGrid');
+        calendarGrid.innerHTML = '';
+
+        const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+        for (let i = startDay - 1; i >= 0; i--) {
+          const day = prevMonthLastDay - i;
+          const date = new Date(year, month - 1, day);
+          const dayElement = createDayElement(day, date, true);
+          calendarGrid.appendChild(dayElement);
+        }
+
+        for (let day = 1; day <= totalDays; day++) {
+          const date = new Date(year, month, day);
+          const dayElement = createDayElement(day, date, false);
+          calendarGrid.appendChild(dayElement);
+        }
+
+        const remainingCells = 42 - (startDay + totalDays);
+        for (let day = 1; day <= remainingCells; day++) {
+          const date = new Date(year, month + 1, day);
+          const dayElement = createDayElement(day, date, true);
+          calendarGrid.appendChild(dayElement);
+        }
+      }
+
+      function createDayElement(day, date, isOtherMonth) {
+        const dayElement = document.createElement('div');
+        dayElement.className = 'calendar-day';
+        if (isOtherMonth) {
+          dayElement.classList.add('other-month');
+        }
+        if (isToday(date)) {
+          dayElement.classList.add('today');
+        }
+
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'day-number';
+        dayNumber.textContent = day;
+        dayElement.appendChild(dayNumber);
+
+        const dayHomeworks = document.createElement('div');
+        dayHomeworks.className = 'day-homeworks';
+
+        const homeworksForDate = getHomeworksForDate(date);
+        homeworksForDate.forEach(homework => {
+          const homeworkElement = document.createElement('div');
+          homeworkElement.className = 'day-homework';
+          if (settings.enablePriority && homework.priority) {
+            homeworkElement.classList.add(homework.priority);
+          }
+          if (homework.status === 'completed') {
+            homeworkElement.classList.add('completed');
+          }
+          homeworkElement.textContent = homework.subject;
+          homeworkElement.onclick = (e) => {
+            e.stopPropagation();
+            openEditModal(homework.id);
+          };
+          dayHomeworks.appendChild(homeworkElement);
+        });
+
+        dayElement.appendChild(dayHomeworks);
+
+        dayElement.onclick = () => openDayModal(date);
+
+        return dayElement;
+      }
+
+      function changeMonth(delta) {
+        currentDate.setDate(1);
+        currentDate.setMonth(currentDate.getMonth() + delta);
+        renderCalendar();
+      }
+
+      function goToToday() {
+        currentDate = new Date();
+        renderCalendar();
+      }
+
+      function openModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+      }
+
+      function openDayModal(date) {
+        selectedDate = date;
+        const dateStr = formatDate(date);
+        document.getElementById('dayModalTitle').textContent = `${date.getMonth() + 1}月${date.getDate()}日の宿題`;
+
+        const dayHomeworksDiv = document.getElementById('dayHomeworks');
+        const homeworksForDate = getHomeworksForDate(date);
+
+        if (homeworksForDate.length === 0) {
+          dayHomeworksDiv.innerHTML = '<p style="color: #6b7280;">この日の宿題はありません</p>';
+        } else {
+          dayHomeworksDiv.innerHTML = homeworksForDate.map(homework => `
+            <div class="homework-detail-item ${homework.status === 'completed' ? 'completed' : ''}">
+              <div class="homework-detail-header">
+                <span class="homework-detail-subject">${homework.subject}</span>
+                ${settings.enablePriority && homework.priority ? `<span class="badge badge-${homework.priority}">${priorityText[homework.priority]}</span>` : ''}
+              </div>
+              <p class="homework-detail-task">${homework.task}</p>
+              <div style="margin-bottom: 0.5rem;">
+                <span class="badge badge-${homework.status}">${statusText[homework.status]}</span>
+              </div>
+              <div class="homework-detail-actions">
+                <button class="btn-secondary" onclick="openEditModal(${homework.id})">編集</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        openModal('dayModal');
+      }
+
+      function openEditModal(id) {
+        const homework = homeworks.find(h => h.id === id);
+        if (!homework) return;
+
+        document.getElementById('editId').value = homework.id;
+        document.getElementById('editSubject').value = homework.subject;
+        document.getElementById('editTask').value = homework.task;
+        document.getElementById('editDueDate').value = homework.dueDate;
+        if (settings.enablePriority) {
+          document.getElementById('editPriority').value = homework.priority || 'medium';
+        }
+        document.getElementById('editStatus').value = homework.status;
+
+        closeModal('dayModal');
+        openModal('editModal');
+      }
+
+      function addHomework(e) {
+        e.preventDefault();
+        const subject = document.getElementById('addSubject').value;
+        const task = document.getElementById('addTask').value;
+        const dueDate = document.getElementById('addDueDate').value;
+        const priority = settings.enablePriority ? document.getElementById('addPriority').value : 'medium';
+
+        if (!subject || !task || !dueDate) return;
+
+        const homework = {
+          id: Date.now(),
+          subject,
+          task,
+          dueDate,
+          priority,
+          status: 'not_started',
+          createdAt: new Date().toISOString()
+        };
+
+        homeworks.push(homework);
+        saveHomeworks();
+        renderCalendar();
+
+        document.getElementById('addForm').reset();
+        document.getElementById('addPriority').value = 'medium';
+      }
+
+      function updateHomework(e) {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('editId').value);
+        const subject = document.getElementById('editSubject').value;
+        const task = document.getElementById('editTask').value;
+        const dueDate = document.getElementById('editDueDate').value;
+        const priority = settings.enablePriority ? document.getElementById('editPriority').value : (homeworks.find(h => h.id === id)?.priority || 'medium');
+        const status = document.getElementById('editStatus').value;
+
+        homeworks = homeworks.map(h => {
+          if (h.id === id) {
+            return { ...h, subject, task, dueDate, priority, status };
+          }
+          return h;
+        });
+
+        saveHomeworks();
+        renderCalendar();
+        closeModal('editModal');
+      }
+
+      function deleteHomework() {
+        const id = parseInt(document.getElementById('editId').value);
+        if (confirm('この宿題を削除しますか？')) {
+          homeworks = homeworks.filter(h => h.id !== id);
+          saveHomeworks();
+          renderCalendar();
+          closeModal('editModal');
+        }
+      }
+
+      function openSettingsModal() {
+        openModal('settingsModal');
+      }
+
+      function clearAllData() {
+        if (confirm('すべての宿題データを削除しますか？この操作は取り消せません。')) {
+          homeworks = [];
+          saveHomeworks();
+          renderCalendar();
+          closeModal('settingsModal');
+        }
+      }
+
+      document.getElementById('addForm').addEventListener('submit', addHomework);
+      document.getElementById('editForm').addEventListener('submit', updateHomework);
+
+      loadSettings();
+      renderCalendar();
+    </script>
+  </body>
+</html>
